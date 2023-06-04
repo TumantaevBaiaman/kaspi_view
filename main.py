@@ -1,3 +1,3 @@
 from selenium_logic import view
 
-view.testing()
+view.run_bot()
