@@ -2,6 +2,7 @@ import time
 from abc import ABC, abstractmethod
 
 from selenium import webdriver
+from selenium.common import NoSuchElementException
 from selenium.webdriver.support.wait import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
@@ -11,55 +12,12 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 
 
-def testing():
-    login_url = "https://kaspi.kz/mc/#/login"
-    url_products = "https://kaspi.kz/mc/#/products/ACTIVE/1"
-
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-    time.sleep(5)
-
-    driver.get(login_url)
-    time.sleep(5)
-    email_field = driver.find_element(By.XPATH, '//*[@id="app"]/div/div/div/div/form/div[1]/div/div/section/div/nav/ul/li[2]/a')
-    email_field.click()
-    time.sleep(5)
-
-    login_field = driver.find_element(By.XPATH, "/html/body/div/div/div/div/div/form/div[1]/div/div/section/div/section/div[2]/input")
-    login_field.clear()
-    login_field.send_keys(PROF_INFO["username"])
-    login_field.send_keys(Keys.RETURN)
-    time.sleep(5)
-
-    password_field = driver.find_element(By.XPATH, "/html/body/div/div/div/div/div/form/div[1]/div/div/div[1]/input")
-    password_field.clear()
-    password_field.send_keys(PROF_INFO["password"])
-    password_field.send_keys(Keys.RETURN)
-    time.sleep(5)
-
-    driver.get(url_products)
-
-    time.sleep(5)
-
-    for i in range(1, 25):
-        button_field = driver.find_element(By.XPATH, "/html/body/div/div/section/div/div[2]/div/section/div/div[3]/div[2]/div/nav/a[2]/span/i")
-        data = driver.find_element(By.XPATH, "/html/body/div[1]/div/section/div/div[2]/div/section/div/div[2]/table/tbody")
-
-        for row in data.find_elements(By.XPATH, ".//tr"):
-            print([i.text for i in row.find_elements(By.XPATH, ".//p")])
-            b_t = row.find_element(By.XPATH, ".//td[1]/label/span[1]")
-            b_t.click()
-            time.sleep(2)
-
-
-
-        button_field.click()
-        time.sleep(5)
-
-
-class KaspiLocatorMixin:
+class KaspiMixin:
     _email_location_locator = '//*[@id="app"]/div/div/div/div/form/div[1]/div/div/section/div/nav/ul/li[2]/a'
     _login_field_locator = "/html/body/div/div/div/div/div/form/div[1]/div/div/section/div/section/div[2]/input"
     _password_field_locator = "/html/body/div/div/div/div/div/form/div[1]/div/div/div[1]/input"
+    _btn_next_locator = "/html/body/div/div/section/div/div[2]/div/section/div/div[3]/div[2]/div/nav/a[2]/span/i"
+    _tbody_products_locator = "/html/body/div[1]/div/section/div/div[2]/div/section/div/div[2]/table/tbody"
 
 
 class KaspiABC(ABC):
@@ -77,7 +35,7 @@ class KaspiABC(ABC):
         pass
 
 
-class KaspiBot(KaspiABC, KaspiLocatorMixin):
+class KaspiBot(KaspiABC, KaspiMixin):
     __login_url: str = "https://kaspi.kz/mc/#/login"
     __url_products: str = "https://kaspi.kz/mc/#/products/ACTIVE/1"
     __driver = None
@@ -106,6 +64,31 @@ class KaspiBot(KaspiABC, KaspiLocatorMixin):
         password_field.send_keys(self._password)
         password_field.send_keys(Keys.RETURN)
 
+        time.sleep(5)
+
+    def __del_product(self):
+        self.__driver.get(self.__url_products)
+        time.sleep(5)
+        wait = WebDriverWait(self.__driver, 15)
+
+        while True:
+
+            try:
+                tbody_data_products_ls = wait.until(EC.visibility_of_element_located((By.XPATH, self._tbody_products_locator)))
+
+                # for row in tbody_data_products_ls.find_elements(By.XPATH, ".//tr"):
+                #     print([i.text for i in row.find_elements(By.XPATH, ".//p")])
+                #     b_t = row.find_element(By.XPATH, ".//td[1]/label/span[1]")
+                #     wait.until(EC.element_to_be_clickable((By.XPATH, ".//td[1]/label/span[1]")))
+                #     b_t.click()
+
+                btn_next = self.__driver.find_element(By.XPATH, self._btn_next_locator)
+                btn_next.click()
+                time.sleep(5)
+
+            except NoSuchElementException:
+                break
+
     def close_driver(self):
         if self.__driver is not None:
             self.__driver.quit()
@@ -113,6 +96,7 @@ class KaspiBot(KaspiABC, KaspiLocatorMixin):
     def run(self):
         self.initialize_driver()
         self.login()
+        self.__del_product()
         self.close_driver()
 
 
