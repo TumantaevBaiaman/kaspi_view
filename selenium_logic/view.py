@@ -35,7 +35,7 @@ class KaspiABC(ABC):
         pass
 
 
-class KaspiBot(KaspiABC, KaspiMixin):
+class KaspiDeleteProducts(KaspiABC, KaspiMixin):
     __login_url: str = "https://kaspi.kz/mc/#/login"
     __url_products: str = "https://kaspi.kz/mc/#/products/ACTIVE/1"
     __driver = None
@@ -76,11 +76,13 @@ class KaspiBot(KaspiABC, KaspiMixin):
             try:
                 tbody_data_products_ls = wait.until(EC.visibility_of_element_located((By.XPATH, self._tbody_products_locator)))
 
-                # for row in tbody_data_products_ls.find_elements(By.XPATH, ".//tr"):
-                #     print([i.text for i in row.find_elements(By.XPATH, ".//p")])
-                #     b_t = row.find_element(By.XPATH, ".//td[1]/label/span[1]")
-                #     wait.until(EC.element_to_be_clickable((By.XPATH, ".//td[1]/label/span[1]")))
-                #     b_t.click()
+                for row in tbody_data_products_ls.find_elements(By.XPATH, ".//tr"):
+                    product_sku = [i.text for i in row.find_elements(By.XPATH, ".//p")][1].split("/n")[-1]
+                    print(product_sku, [i.text for i in row.find_elements(By.XPATH, ".//p")])
+                    b_t = row.find_element(By.XPATH, ".//td[1]/label/span[1]")
+                    wait.until(EC.element_to_be_clickable((By.XPATH, ".//td[1]/label/span[1]")))
+                    b_t.click()
+                    time.sleep(2)
 
                 btn_next = self.__driver.find_element(By.XPATH, self._btn_next_locator)
                 btn_next.click()
@@ -100,8 +102,52 @@ class KaspiBot(KaspiABC, KaspiMixin):
         self.close_driver()
 
 
+class KaspiReadNewProducts(KaspiABC, KaspiMixin):
+    __login_url: str = "https://kaspi.kz/mc/#/login"
+    __url_products: str = "https://kaspi.kz/mc/#/products/ACTIVE/1"
+    __driver = None
+
+    def __init__(self, username: str, password: str):
+        self._username: str = username
+        self._password: str = password
+
+    def initialize_driver(self):
+        self.__driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+
+    def login(self):
+        self.__driver.get(self.__login_url)
+        wait = WebDriverWait(self.__driver, 10)
+
+        email_field = wait.until(EC.element_to_be_clickable((By.XPATH, self._email_location_locator)))
+        email_field.click()
+
+        login_field = wait.until(EC.visibility_of_element_located((By.XPATH, self._login_field_locator)))
+        login_field.clear()
+        login_field.send_keys(self._username)
+        login_field.send_keys(Keys.RETURN)
+
+        password_field = wait.until(EC.visibility_of_element_located((By.XPATH, self._password_field_locator)))
+        password_field.clear()
+        password_field.send_keys(self._password)
+        password_field.send_keys(Keys.RETURN)
+
+        time.sleep(5)
+
+    def __read_new_products(self):
+        self.__driver.get(self.__url_products)
+        time.sleep(5)
+        wait = WebDriverWait(self.__driver, 15)
+
+        pass
+
+
+    def close_driver(self):
+        if self.__driver is not None:
+            self.__driver.quit()
+
+
 def run_bot():
-    bot = KaspiBot(PROF_INFO["username"], PROF_INFO["password"])
+    bot = KaspiDeleteProducts(PROF_INFO["username"], PROF_INFO["password"])
     bot.run()
 
 
