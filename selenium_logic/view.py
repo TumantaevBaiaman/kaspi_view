@@ -13,11 +13,18 @@ from selenium.webdriver.support import expected_conditions as EC
 
 
 class KaspiMixin:
+    # authentication
     _email_location_locator = '//*[@id="app"]/div/div/div/div/form/div[1]/div/div/section/div/nav/ul/li[2]/a'
     _login_field_locator = "/html/body/div/div/div/div/div/form/div[1]/div/div/section/div/section/div[2]/input"
     _password_field_locator = "/html/body/div/div/div/div/div/form/div[1]/div/div/div[1]/input"
+
+    # delete products
     _btn_next_locator = "/html/body/div/div/section/div/div[2]/div/section/div/div[3]/div[2]/div/nav/a[2]/span/i"
     _tbody_products_locator = "/html/body/div[1]/div/section/div/div[2]/div/section/div/div[2]/table/tbody"
+
+    # read new products
+    _np_btn_next_locator = ""
+    _np_tbody_products_locator = ""
 
 
 class KaspiABC(ABC):
@@ -104,7 +111,7 @@ class KaspiDeleteProducts(KaspiABC, KaspiMixin):
 
 class KaspiReadNewProducts(KaspiABC, KaspiMixin):
     __login_url: str = "https://kaspi.kz/mc/#/login"
-    __url_products: str = "https://kaspi.kz/mc/#/products/ACTIVE/1"
+    __url_new_products: str = "https://kaspi.kz/mc/#/orders?status=NEW"
     __driver = None
 
     def __init__(self, username: str, password: str):
@@ -134,16 +141,19 @@ class KaspiReadNewProducts(KaspiABC, KaspiMixin):
         time.sleep(5)
 
     def __read_new_products(self):
-        self.__driver.get(self.__url_products)
+        self.__driver.get(self.__url_new_products)
         time.sleep(5)
         wait = WebDriverWait(self.__driver, 15)
-
-        pass
-
 
     def close_driver(self):
         if self.__driver is not None:
             self.__driver.quit()
+
+    def run(self):
+        self.initialize_driver()
+        self.login()
+        self.__read_new_products()
+        self.close_driver()
 
 
 def run_bot():
