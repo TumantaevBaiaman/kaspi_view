@@ -85,7 +85,6 @@ class KaspiDeleteProducts(KaspiABC, KaspiMixin):
 
                 for row in tbody_data_products_ls.find_elements(By.XPATH, ".//tr"):
                     product_sku = [i.text for i in row.find_elements(By.XPATH, ".//p")][1].split("/n")[-1]
-                    print(product_sku, [i.text for i in row.find_elements(By.XPATH, ".//p")])
                     b_t = row.find_element(By.XPATH, ".//td[1]/label/span[1]")
                     wait.until(EC.element_to_be_clickable((By.XPATH, ".//td[1]/label/span[1]")))
                     b_t.click()
