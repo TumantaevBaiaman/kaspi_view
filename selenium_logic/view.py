@@ -78,8 +78,7 @@ class KaspiDeleteProducts(KaspiABC, KaspiMixin):
         time.sleep(5)
         wait = WebDriverWait(self.__driver, 15)
 
-        while True:
-
+        for i in range(25):
             try:
                 tbody_data_products_ls = wait.until(EC.visibility_of_element_located((By.XPATH, self._tbody_products_locator)))
 
@@ -95,7 +94,7 @@ class KaspiDeleteProducts(KaspiABC, KaspiMixin):
                 time.sleep(5)
 
             except NoSuchElementException:
-                break
+                print("Error")
 
     def close_driver(self):
         if self.__driver is not None:
@@ -156,7 +155,7 @@ class KaspiReadNewProducts(KaspiABC, KaspiMixin):
 
 
 def run_bot():
-    bot = KaspiDeleteProducts(PROF_INFO["username"], PROF_INFO["password"])
+    bot = KaspiReadNewProducts(PROF_INFO["username"], PROF_INFO["password"])
     bot.run()
 
 
